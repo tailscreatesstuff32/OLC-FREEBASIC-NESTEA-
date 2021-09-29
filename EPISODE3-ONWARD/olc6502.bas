@@ -1028,7 +1028,7 @@ Function disassemble(nStart As uint16_t,nStop As uint16_t)   As TMAPUINT16TSTRIN
 	 
 	 
 	 
-	 map_InOrder(maplines.proot) 
+	' map_InOrder(maplines.proot) 
 	 
 	 
 	 

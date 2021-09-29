@@ -18,9 +18,7 @@
 'Declare Sub reset_mapper()
 Declare Sub get_scanline()
 
-dim shared bIRQActive As bool = false 
-dim Shared bIRQEnable As bool =  false 
-dim Shared bIRQUpdate As bool =  false 
+
 
 Dim Shared nTargetRegister As uint8_t
 Dim Shared bPRGBankMode As bool = false 

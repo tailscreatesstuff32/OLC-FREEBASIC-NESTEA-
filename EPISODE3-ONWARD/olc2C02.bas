@@ -314,12 +314,12 @@ If (cart_MirrorMode() =  VERTICAL) Then
 	' 
 	elseif ( addr1 >=  &H3F00 and addr1 <=  &H3FFF) Then
 	' 
- addr1 And= &H001F 
+      addr1 And= &H001F 
 		if ( addr1 =  &H0010) Then  addr1 =  &H0000
 		if ( addr1 =  &H0014)Then   addr1 =  &H0004
 		if ( addr1 =  &H0018)Then   addr1 =  &H0008
 		if ( addr1 =  &H001C)Then  addr1 =  &H000C
- tblPalette( addr1)=	data1    '/and& (mask.grayscale ?  &H30 :  &H3F) 
+      tblPalette( addr1)=	data1    '/and& (mask.grayscale ?  &H30 :  &H3F) 
 
  	'Beep
 	End if
@@ -581,6 +581,7 @@ sub LoadBackgroundShifters()
 
 			'// OAM Data
 		Case &H0004 
+		data1 = pOAM[oam_addr]
 
 		'	// Scroll - Not Readable
 		Case &H0005 
@@ -641,9 +642,10 @@ Sub ppu_cpuWrite( addr1 As uint16_t,  data1 as uint8_t)
 	case &H0002' // Status
  
 	case &H0003': // OAM Address
- 
+   oam_addr = data1
 	case &H0004  '// OAM Data
-	 
+	 pOAM[oam_addr] = data1
+
 	case &H0005  '// Scroll
 		if (address_latch =  0) Then
 	 
@@ -795,7 +797,7 @@ Sub renderer1()
 			  '//   |                |                |
 			'	//   |    (32x32)     |    (32x32)     |
 			'	//   |                |                |
-				'//   |                |                |
+			 '//   |                |                |
 			'	// 1 +----------------+----------------+
 			'	//   |                |                |
 			'	//   |                |                |
@@ -945,14 +947,14 @@ Sub renderer1()
 		'//...and reset the x position
 		if (cycle  = 257) Then
 		 
-			'LoadBackgroundShifters() 
+			LoadBackgroundShifters() 
 			TransferAddressX() 
 		End If
 
 		'// Superfluous reads of tile id at end of scanline
 		if (cycle = 338 Or cycle = 340) Then
 		 
-		'	bg_next_tile_id = ppuRead(&H2000 or (vram_addr.reg and &H0FFF)) 
+			bg_next_tile_id = ppuRead(&H2000 or (vram_addr.reg and &H0FFF)) 
 	End If
 
 		if (scanline =  -1 and cycle >= 280 And cycle < 305) Then
@@ -1052,35 +1054,7 @@ renderer1()
 	End If
 
  	
-
-
- 	'Print cycle
-	'WindowTitle("dot: "+ Str(cycle)+" "+ str(scanline))
 End Sub
 
-'	'Dim b1 As Long
-'	'Dim g1 As Long
-'	
-'	'glBegin(GL_POINTS):  	glColor3f((RGBA_R(col1)/255),(RGBA_G(col1)/255),(RGBA_B(col1)/255)):  glVertex2i(cycle-1,scanline): glEnd()
-'
-'
-'	'// Now we have a final pixel colour, and a palette for this cycle
-'	'// of the current scanline. Let's at long last, draw that ^&%*er :P
-'
-''	sprScreen.SetPixel(cycle - 1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
-'
-'   
-'   'PSet(nesscrn,cycle-1,scanline,GetColourFromPaletteRam(bg_palette, bg_pixel))
-'
-'
-'	'// Fake some noise for now
-'	'//sprScreen.SetPixel(cycle - 1, scanline, palScreen[(rand() % 2) ? 0x3F : 0x30]);
-'
-'	'// Advance renderer - it never stops, it's relentless
-'	
-'	'col1  = GetColourFromPaletteRam(bg_palette, bg_pixel)
-'	
-'	
-'	'PSet nesscrn,((cycle-1),(scanline)),GetColourFromPaletteRam(bg_palette, bg_pixel)
 
 

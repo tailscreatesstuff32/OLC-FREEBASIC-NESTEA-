@@ -5,8 +5,8 @@ Sub mapper_004(prgBanks As uint8_t ,chrBanks As uint8_t)
  	
 	vRAMStatic.resize(32*1024)
 
- 	'nPRGBanks = prgBanks
-	'nCHRBanks = chrBanks
+ 	nPRGBanks = prgBanks
+	nCHRBanks = chrBanks
  	resetmapper
 End Sub
 
@@ -70,16 +70,16 @@ Dim tmp1 As bool
 			if (bPRGBankMode) Then
 			 
 				pPRGBank(2) = (pRegister(6) and &H3F) * &H2000 
-				pPRGBank(0) = (8 * 2 - 2) * &H2000 
+				pPRGBank(0) = (nPRGBanks * 2 - 2) * &H2000 
 			 
 			else
 			 
 			 	pPRGBank(0) = (pRegister(6) and &H3F) * &H2000 
-				pPRGBank(2) = (8 * 2 - 2) * &H2000 
+				pPRGBank(2) = (nPRGBanks * 2 - 2) * &H2000 
 			End If
 			'
 			pPRGBank(1) = (pRegister(7) and &H3F) * &H2000 
-			pPRGBank(3) = (8 * 2 - 1) * &H2000 
+			pPRGBank(3) = (nPRGBanks * 2 - 1) * &H2000 
 
 				
       End If
@@ -171,21 +171,11 @@ Sub resetmapper overload ()
 
 	pPRGBank(0) = 0 * &H2000 
 	pPRGBank(1) = 1 * &H2000 
-	pPRGBank(2) = (8 * 2 - 2) * &H2000 
-	pPRGBank(3) = (8 * 2 - 1) * &H2000 
+	pPRGBank(2) = (nPRGBanks * 2 - 2) * &H2000 
+	pPRGBank(3) = (nPRGBanks * 2 - 1) * &H2000 
 	
  	
  End Sub
-Function irqstate() As bool
-	
-	return bIRQActive
-	
-End function
-Sub irqclear() 
-	
-	bIRQActive = FALSE
-	
-End Sub
 
 
 'Declare function reset_mapper OverLoad() As MIR

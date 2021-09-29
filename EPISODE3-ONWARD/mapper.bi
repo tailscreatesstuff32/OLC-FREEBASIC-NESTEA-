@@ -14,10 +14,10 @@ Declare Sub mapper OverLoad(prgBanks As uint8_t ,chrBanks As uint8_t)
 Declare function irqState() As bool
 Declare sub  irqClear() 
 
-'dim shared bIRQActive As bool = false 
-'dim Shared bIRQEnable As bool =  false 
-'dim Shared bIRQUpdate As bool =  false 
 
+dim shared bIRQActive As bool = false 
+dim Shared bIRQEnable As bool =  false 
+dim Shared bIRQUpdate As bool =  false 
 
 'Declare sub scanline()
 
@@ -29,7 +29,7 @@ Declare sub  irqClear()
 		ONESCREEN_HI 
 	End Enum
 
-Dim Shared mirrormode As MIRROR = HORIZONTAL
+Dim Shared mirrormode As MIRROR = HARDWARE
 Dim Shared As  uint8_t nPRGBanks = 0 
 Dim  Shared As uint8_t nCHRBanks = 0 
 
@@ -46,3 +46,14 @@ End Sub
 Function _mirror overload() As MIRROR 
 	Return mirrormode
 End Function
+
+Function irqstate() As bool
+	
+	return bIRQActive
+	
+End function
+Sub irqclear() 
+	
+	bIRQActive = FALSE
+	
+End Sub

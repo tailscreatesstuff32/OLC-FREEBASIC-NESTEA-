@@ -1,8 +1,9 @@
 'THINGS TO NOTE: the reason california games had the glitch it needs stuff from episode 5
 'the code needs cleanup AND ESPECIALLY fixes for places that lag
 
+
 #Include Once  "nes/NES.bi"
-#include "fbgfx.bi"
+#Include "fbgfx.bi"
 
 Dim Shared hIcon As HICON 
 Dim Shared hInstance As HMODULE
@@ -67,6 +68,8 @@ Dim shared pressed_P As boolean = FALSE
 
 Dim Shared mapAsm As TMAPUINT16TSTRING
 
+
+Dim Shared it_a As MAPNODEUINT16TSTRING ptr
 	'MMapTemplate(UINT16T , String)
 	
 	
@@ -92,7 +95,45 @@ EndIf
 
 END Function	
 	
-		
+		'	Function InOrder2 Overload(pRoot As MAPNODEUINT16TSTRING Ptr) As String  
+		'	
+		'	If pRoot <> 0 Then
+		'		
+		'		inOrder(pRoot->pLeft)
+		'		
+		'		#if ctkey = String
+		'			
+		'			#if ctdata = String
+		'				
+		'				return   *(pRoot->nData)
+		'				
+		'			#else
+		'				
+		'		Return   pRoot->nData
+		'				
+		'			#endif
+		'			
+		'		#else
+		'			
+		'			#if ctdata = String
+		'				
+		'				Return  *(pRoot->nData)
+		'				
+		'			#else   
+		'				
+		'				Return pRoot->nData
+		'				
+		'			#endif      
+		'			
+		'		#endif
+		'		
+		'		inOrder(pRoot->pRight)      
+		'		
+		'	Endif   
+		'	
+		'	
+		'	
+		'End Function	
 FUNCTION keypress_space (k AS long) As boolean
 
 
@@ -287,7 +328,7 @@ Draw String (x1+178,y1),"C",IIf(cpu_cpustatus And C,RGB(0,255,0),RGB(255,0,0))
 
 END Sub
 
-
+'backup DONT CHANGE
 Sub DrawCode_real2(x1 As Integer, y1 As Integer, nlines As Integer) 'work in progress figuring out MAPS
 	
 '
@@ -366,6 +407,57 @@ Sub DrawCode_real2(x1 As Integer, y1 As Integer, nlines As Integer) 'work in pro
 	
 	
 End Sub
+'//////////////////////////////////////////////////////////////////////
+
+
+
+
+Sub DrawCode_real3(x1 As Integer, y1 As Integer, nlines As Integer) 'work in progress figuring out MAPS
+	
+
+
+
+	it_a = mapAsm.findAddr(pc) ' find key position
+	dim nLineY As Integer = (nLines shr 1) * 10 + y1  
+		if (it_a <> NULL)Then
+	'	
+	 		'DrawString(x1, nLineY, "GOODBYE",  11) 'gets first iteration for cursor
+	 		Draw String (x1, nLineY), *(it_a->ndata),RGB(0,255,255) 
+	 		while (nLineY < (nLines * 10) + y1)
+	 		 
+	 			nLineY += 10
+	'			'it_a+=1  'increment iterator
+	'		'	if (it_a <> mapAsm.end()) Then
+	'		 
+	 				'DrawString(x1, nLineY, "HELLO",255) 'draws bottom half of code
+	 				
+	 			'	Draw String (x1, nLineY), *(it_a->ndata)'inorder(mapAsm.proot)
+	 			
+	'			'End If
+	 		Wend
+		End If
+
+		''it_a = mapAsm.find(nes.cpu.pc) ' find key position
+		'nLineY = (nLines Shr 1) * 10 + y1 
+		''if (it_a <> mapAsm.end()) Then 
+		' 
+		'	while (nLineY > y1)
+		'	 
+		'		nLineY -= 10
+		'		'	it_a-=1			''decrement iterator
+		'	'	if (it_a <> mapAsm.end()) Then
+		'		
+		'		'	DrawString(x1, nLineY, "HELLO",255)'draws top half of code
+		'		Draw String (x1, nLineY), "HELLO" 
+		'		
+		'		'End If
+		'	Wend
+		''End if
+	
+	
+End Sub
+
+
 
 
 
@@ -427,7 +519,10 @@ End Sub
 
 main
 
-
+	 'pOAM[0] = 5
+	 'pOAM[1] = 5
+	 'pOAM[2] = 5
+	 'pOAM[3] = 5
 
 
 Do
@@ -454,10 +549,10 @@ frames_per_sec
 	 bus_reset()
 	 End If
 
-		 
+		' bus_clock()
      	 'Cls
         	 	 If bEmulationRun Then
- 		 		Do:  bus_clock():  Loop while not(frame_complete) 
+ 		 		Do:  bus_clock2:  Loop while not(frame_complete) 
 				frame_complete = false 
  		 	
  		 	
@@ -479,8 +574,25 @@ frames_per_sec
 		 DrawCpu 516, 2  
    
     
-    DrawCode_real2(516,72,26)
-   
+    
+   ' DrawCode_real2(516,72,26)
+  ' DrawCode_real3(516,72,26)
+  
+  
+  For i As Integer = 0 To 26-1 
+  	
+  	Dim s As String = hex1(i,2)
+  	
+  	Draw String(516,72 + i * 10),s & ": (" & Str(pOAM[i * 4 + 3])  _
+  					& ", " & Str(pOAM[i * 4 + 0]) & ") " _
+  					& "ID: " & hex1(pOAM[i * 4 + 1],2) _ 
+  					& " AT: " & hex1(pOAM[i * 4 + 2],2)  
+  	
+  Next
+  
+  
+  
+  
 		const  nSwatchSize As Integer = 6
 		for p As Integer = 0 to 8 - 1' // For each palette
 			For s As Integer=  0 To 4-1  '// For each index
@@ -542,10 +654,10 @@ Cls
 'SendMessage(Handle,WM_SETICON,NULL,Cast(LPARAM,hIcon)) ' our second WIN API sets the loaded icon to our dialog 
 
 'SetWindowLongA(Handle, GWL_EXSTYLE, WS_EX_APPWINDOW OR WS_EX_WINDOWEDGE)
-   'insert_cartridge("California Games (U).nes")
-  ' insert_cartridge("donkey.nes")
+  insert_cartridge("California Games (U).nes")
+   'insert_cartridge("donkey.nes")
    ' insert_cartridge("Burger Time (U) [!].nes")
-insert_cartridge("Ren & Stimpy Show, The (U).nes")
+ 'insert_cartridge("Ren & Stimpy Show, The (U).nes")
    'insert_cartridge("roms/soccer.nes")
     'insert_cartridge("roms/tennis.nes")
      'insert_cartridge("roms/kung fu.nes")
@@ -553,6 +665,13 @@ insert_cartridge("Ren & Stimpy Show, The (U).nes")
     'insert_cartridge("digdug.nes")
      '  insert_cartridge("roms/mario bros.nes")
       ' insert_cartridge("ice climber.nes")
+    'insert_cartridge("Felix the Cat (U).nes")
+     'insert_cartridge("Tiny Toon Adventures (U).nes")
+     ' SMB2.nes
+'      insert_cartridge("roms/SMB2.nes")
+      
+      'insert_cartridge("nestest.nes")
+      
 	If ImageValid = TRUE Then
 	Print "CRC: " & "???? WORK IN PROGRESS"
 	Print "loaded rom!"
@@ -587,7 +706,7 @@ Locate ,,0
 cpuram(&HFFFC) = &H00
 cpuram(&HFFFD) = &H80
 
-mapAsm = disassemble(&H0000, &HFFFF) '&H35
+'mapAsm = disassemble(&H0000, &HFFFF) '&H35
 
 bus_reset()
 
@@ -606,3 +725,5 @@ Sub drawString(x1 As Integer,y1 As Integer  ,str1 As String,col1 As Integer )
 	
 End Sub
 
+
+		

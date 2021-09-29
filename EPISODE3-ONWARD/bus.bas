@@ -83,6 +83,14 @@ Sub Bus_write( addr1 as uint16_t,data1 as uint8_t  )
 		'// which is the equivalent of addr % 8.
 	
 		ppu_cpuWrite(addr1 And &H0007, data1) 
+		
+		
+	ElseIf (addr1 = &H4014) Then
+		dma_page = data1
+		dma_addr = 0
+		dma_transfer = TRUE
+		'beep
+
 
 	elseif (addr1 >= &H4016 And addr1 <= &H4017) Then
 
@@ -118,11 +126,11 @@ Sub bus_clock
 	'// The PPU is capable of emitting an interrupt to indicate the
 	'// vertical blanking period has been entered. If it has, we need
 	'// to send that irq to the CPU.
-	'If (irqState()) Then
+	If (irqState()) Then
 
-	'	irqClear()
-	'	irq()		
-	'End If
+		irqClear()
+		irq()		
+	 End If
 	'
 	if (ppu_nmi) Then
 	 
@@ -143,6 +151,11 @@ Sub bus_reset()
    cpu_reset()
 	ppu_reset() 
 	nSystemClockCounter = 0
+	dma_page = 0
+	dma_addr = 0
+	dma_data = 0
+	dma_dummy = TRUE
+	dma_transfer = FALSE
 	
 	
 	
@@ -151,7 +164,82 @@ Sub bus_reset()
 End Sub	
 	
 	
+	Sub bus_clock2
 	
+	'
+	'	// Clocking. The heart and soul of an emulator. The running
+	'// frequency is controlled by whatever calls this function.
+	'// So here we "divide" the clock as necessary and call
+	'// the peripheral devices clock() function at the correct
+	'// times.
+
+	'// The fastest clock frequency the digital system cares
+	'// about is equivalent to the PPU clock. So the PPU is clocked
+	'// each time this function is called.
+	ppu_clock() 
+
+	 
+	'// The CPU runs 3 times slower than the PPU so we only call its
+	'// clock() function every 3 times this function is called. We
+	'// have a global counter to keep track of this.
+	if (nSystemClockCounter mod 3 =  0) Then
+		If dma_transfer Then
+		'	
+			If dma_dummy Then
+				
+				if (nSystemClockCounter mod 2 =  1) Then
+					dma_dummy = FALSE
+				End If
+		'		
+			Else
+					if (nSystemClockCounter mod 2 =  0) Then
+					dma_data = bus_read(dma_page shl 8 or dma_addr)
+					Else
+				
+						pOAM[dma_addr] = dma_data
+						dma_addr+=1
+				   		
+				      if dma_addr = 0 Then
+							dma_transfer = FALSE
+							dma_dummy = TRUE
+						EndIf
+		'
+		'	 	
+		      End If
+		'		
+	End If
+     
+		Else  
+	clock_cpu() 
+		
+
+	End If
+End If ' ends nSystemClockCounter mod 3 =  0
+
+		
+
+	'// The PPU is capable of emitting an interrupt to indicate the
+	'// vertical blanking period has been entered. If it has, we need
+	'// to send that irq to the CPU.
+	'If (irqState()) Then
+
+	'	irqClear()
+	'	irq()		
+	'End If
+	'
+	if (ppu_nmi) Then
+	 
+		ppu_nmi = false 
+		cpu_nmi() 
+	End If
+
+	nSystemClockCounter+=1
+	
+	
+	
+	
+	
+End Sub
 	
 
 	
