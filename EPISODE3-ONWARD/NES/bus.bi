@@ -14,10 +14,6 @@
 
 
 
-Dim Shared  cpuram(2048) As uint8_t 
-Dim Shared controller(2) As uint8_t
-
-
 Dim  Shared controller_state(2) As uint8_t
 
 
@@ -37,6 +33,15 @@ Declare Function bus_read(addr1 As uint16_t, bReadOnly As bool = false) As uint8
 
 
 Dim Shared As uint32_t nSystemClockCounter = 0
+
+
+Dim Shared dma_page As uint8_t
+Dim Shared dma_addr As uint8_t
+Dim Shared dma_data As uint8_t
+
+Dim Shared dma_transfer As bool = FALSE
+Dim Shared dma_dummy As bool = TRUE
+
 
 
 
