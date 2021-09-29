@@ -61,9 +61,12 @@
 			Declare Function InsertNode(pNode As MAPNODE##ctkey##ctdata Ptr, nKey As ctkey , nData As ctdata) As MAPNODE##ctkey##ctdata Ptr
 			
 			Declare Function GetMinNode(pNode As MAPNODE##ctkey##ctdata Ptr) As MAPNODE##ctkey##ctdata Ptr
-			
+			Declare Function  Findaddr (nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
 			Declare Function DelNode(pRoot As MAPNODE##ctkey##ctdata Ptr, nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
-			
+					
+				Declare Function FindNodeAddr(pNode As MAPNODE##ctkey##ctdata Ptr , nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
+
+	'		
 			#if ctdata = String
 								Declare Function FindNode (pNode As MAPNODE##ctkey##ctdata Ptr , nKey As ctkey) As Zstring Ptr
 
@@ -86,6 +89,7 @@
 			
 			Declare Sub DeleteNode(nKey As ctkey)
 			Declare Function  Find (nKey As ctkey) As ctdata
+			
 			'Declare Function  Find OverLoad(nKey As ctkey) As ctdata
 			'Declare Function  Find OverLoad(nKey As ctkey) As  MAPNODE##ctkey##ctdata Ptr
 			
@@ -1134,6 +1138,34 @@
 
 		#endif 
 		
+		Function TMAP##ctkey##ctdata.FindNodeAddr(pNode As MAPNODE##ctkey##ctdata Ptr , nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
+				
+				If pNode = 0 Then
+					
+					Return 0
+					
+				Else
+					
+					If nKey < pNode->nKey Then
+						
+						Return FindNodeAddr(pNode->pLeft , nKey)
+						
+					Else
+						
+						If nKey > pNode->nKey Then
+							
+							Return FindNodeAddr(pNode->pRight , nKey)
+							
+						Else
+							
+							Return pNode
+							
+						Endif
+						
+					Endif
+					
+				EndIf
+		End function
 		Sub TMAP##ctkey##ctdata.DelTree(pRoot As MAPNODE##ctkey##ctdata Ptr) 
 			
 			If pRoot <> 0 Then
@@ -1237,6 +1269,16 @@
 			#endif
 			
 		End Function
+			
+	Function TMAP##ctkey##ctdata.FindAddr(nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
+			
+	
+				
+				Return FindNodeAddr(pRoot , nKey)
+				
+	End Function	
+			
+			
 			
 			''Function  TMAP##ctkey##ctdata.Find(nKey As ctkey) As MAPNODE##ctkey##ctdata Ptr
 			''
