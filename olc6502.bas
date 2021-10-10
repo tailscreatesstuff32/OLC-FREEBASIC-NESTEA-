@@ -46,7 +46,7 @@ Sub irq()
 		
 		
 	EndIf
-	
+
 	
 End Sub
 
@@ -67,7 +67,8 @@ Sub cpu_nmi()
 	Dim hi As uint16_t = bus_read(addr_abs + 1) 
 	pc = (hi shl 8) or lo 
 
-	cycles = 8 
+	cycles = 8
+
 	
 End Sub
 Sub SetFlag(f As FLAGS6502,v As BOOL) ' finished
@@ -81,7 +82,7 @@ Sub SetFlag(f As FLAGS6502,v As BOOL) ' finished
 	EndIf
 	
 End Sub
-Function Getflag(f As FLAGS6502) As uint8_t ' finished
+Function Getflag(f As FLAGS6502) as uint8_t ' finished
 	
 	Return IIf((( cpu_cpustatus  And f) > 0),1,0)
 	
@@ -298,6 +299,8 @@ Sub cpu_reset() ' finished
 	addr_abs = &HFFFC
 	dim lo As uint16_t = cpu_read(addr_abs + 0)
 	Dim hi As uint16_t = cpu_read(addr_abs + 1)
+	
+	Erase(cpuram)
 
 
 	pc = (hi shl 8) Or lo
@@ -1028,7 +1031,7 @@ Function disassemble(nStart As uint16_t,nStop As uint16_t)   As TMAPUINT16TSTRIN
 	 
 	 
 	 
-	 map_InOrder(maplines.proot) 
+	' map_InOrder(maplines.proot) 
 	 
 	 
 	 

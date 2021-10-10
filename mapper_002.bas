@@ -15,7 +15,7 @@
 
  	nPRGBanks = prgBanks
 	nCHRBanks = chrBanks
- 	
+ 	'resetmapper
  End Sub
  
  
@@ -30,9 +30,9 @@
 
 
 'Function cpuMapRead OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t,ByRef data1 As uint8_t = 0 ) As bool
- Function cpuMapRead OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t ) As bool
+Function cpuMapRead overload(addr1 As uint16_t, ByRef mapped_addr As uint32_t, ByRef data1 As uint8_t )As bool
 
-	if (addr1 >= &H8000 And addr1 <= &HBFFF) Then
+	If (addr1 >= &H8000 And addr1 <= &HBFFF) Then
 	 
 		mapped_addr = nPRGBankSelectLo * &H4000 + (addr1 And &H3FFF)
 		return true
@@ -49,7 +49,7 @@ End function
 
 
 
-Function cpuMapWrite OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t,data1 As uint8_t ) As bool
+Function cpuMapWrite OverLoad(addr1 As uint16_t ,ByRef mapped_addr As  uint32_t, data1 As uint8_t) As bool
  
 	'// if PRGROM is 16KB
 	'//     CPU Address Bus          PRG ROM
@@ -71,7 +71,7 @@ End function
 
 
 
-Function ppuMapRead OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t ) As bool
+Function ppuMapRead OverLoad(addr1 As uint16_t, ByRef mapped_addr As uint32_t) As bool 
  
 	if (addr1 < &H2000) then
 	 
@@ -83,11 +83,11 @@ Function ppuMapRead OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t 
 End if
 End function 
 
-Function ppuMapWrite OverLoad (addr1 As uint16_t , ByRef mapped_addr As uint32_t ) As bool
+Function ppuMapWrite OverLoad(addr1 As uint16_t, ByRef mapped_addr As uint32_t) As bool
  
 	if (addr1 < &H2000) Then
 	 
-		if (nCHRBanks = 0) then'// Treating as RAM
+		If (nCHRBanks = 0) then'// Treating as RAM
 	 
 			mapped_addr = addr1 
 			return true 

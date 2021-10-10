@@ -3,13 +3,15 @@
 
 
 #Include Once "windows.bi"
-#Include Once "containers/vector.bi"
+'#Include Once "containers/vector.bi"
 #include "nes/Cartridge.bi"
 #include "file.bi" 
 
-'#Include Once "mapper_000.bas"
+#Include Once "mapper_000.bas"
 '#Include Once "mapper_002.bas"
-#Include Once "mapper_004.bas"
+'#Include Once "mapper_004.bas"
+'#Include Once "mapper_004_TL29.bas"
+
 
 	Declare Function cart_cpuRead( addr1 As uint16_t, Byref data1 As uint8_t) As bool 
 	Declare function cart_cpuWrite(addr1 As uint16_t,  data1 As uint8_t)As bool
@@ -90,7 +92,7 @@
 
 		'// Determine Mapper ID
 		nMapperID = ((header.mapper2 shr 4) shl 4) or(header.mapper1 shr 4) 
-		cart_mirror  = IIf((header.mapper1 And &H01), VERTICAL, HORIZONTAL )
+		hw_mirror = IIf((header.mapper1 And &H01), VERTICAL, HORIZONTAL )
 
 		'// "Discover" File Format
 		Dim As uint8_t nFileType = 1 
@@ -153,15 +155,15 @@
 		case   0  'pMapper = std::make_shared<Mapper_000>(nPRGBanks, nCHRBanks); break;
 		
 		'works fine
-	'	mapper_000(cart_nPRGBanks,cart_nCHRBanks)     
+ 	mapper_000(cart_nPRGBanks,cart_nCHRBanks)     
 		
 		case   2 ' is actually working so far
-		 'mapper_002(cart_nPRGBanks,cart_nCHRBanks)  
+	'mapper_002(cart_nPRGBanks,cart_nCHRBanks)  
 		
 		'//case   2: pMapper = std::make_shared<Mapper_002>(nPRGBanks, nCHRBanks); break;
 		'//case   3: pMapper = std::make_shared<Mapper_003>(nPRGBanks, nCHRBanks); break;
 		case   4:
-		mapper_004(cart_nPRGBanks,cart_nCHRBanks)  
+	' mapper_004(cart_nPRGBanks,cart_nCHRBanks)  
 		'//case  66: pMapper = std::make_shared<Mapper_066>(nPRGBanks, nCHRBanks); break;
 		End select 
         
@@ -443,18 +445,18 @@ End If
 	End Function
 	
 	Function cart_ppuWrite( addr1 As uint16_t,  data1 As uint8_t) As bool 
-	    'DIM mapped_addr AS uint32_t = 0
+	    DIM mapped_addr AS uint32_t = 0
 
-    'mapped_addr = 0
+    mapped_addr = 0
 
-    'If ppuMapWrite(addr1, mapped_addr) THEN
-    '    vCHRMemory[mapped_addr] = data1
+    If ppuMapWrite(addr1, mapped_addr) THEN
+        vCHRMemory[mapped_addr] = data1
 
-    '    cart_ppuWrite = 1
-    'Else
+        cart_ppuWrite = 1
+    Else
 
-    '    cart_ppuWrite = 0
-    'END If
+        cart_ppuWrite = 0
+    END If
 	End Function
 	
 
@@ -465,15 +467,15 @@ End If
 	
 		'// Mirror configuration was defined
 		'// in hardware via soldering
-		return hw_mirror 
+		return hw_mirror
 	 
 	else
  
 	'	// Mirror configuration can be
 	'	// dynamically set via mapper
-		return m 
+		Return m
 	End If
-	Return 	cart_mirror 'hw_mirror
+	Return 	hw_mirror 'hw_mirror
  End Function
 
 'sleep

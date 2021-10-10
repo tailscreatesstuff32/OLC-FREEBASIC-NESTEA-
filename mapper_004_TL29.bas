@@ -1,5 +1,5 @@
 #Include "mapper_004.bi"
-
+Dim Shared lastread As uint16_t
 'Declare function reset_mapper OverLoad() As MIRROR
 Sub mapper_004(prgBanks As uint8_t ,chrBanks As uint8_t)
  	
@@ -13,7 +13,8 @@ End Sub
 
 Function cpuMapWrite( addr1 As uint16_t, ByRef mapped_addr As uint32_t ,data1 As  uint8_t ) As bool
 Dim tmp1 As bool
-	
+
+
 	if (addr1 >= &H6000 and addr1 <= &H7FFF) Then
 	 
 		'// Write is to static ram on cartridge
@@ -135,7 +136,7 @@ Dim tmp1 As bool
 	 
 			bIRQEnable = true 
 		End If
-		return FALSE 
+		return false 
 	End If
 
 
@@ -189,6 +190,7 @@ Sub get_scanline()
    	nIRQCounter = nIRQReload 
 	else
 		nIRQCounter-=1
+		'nIRQCounter And= &Hff
 	End If
 	if (nIRQCounter =  0 and bIRQEnable) Then
 	 
@@ -239,13 +241,36 @@ End If
 End Function
 
 Function ppuMapRead( addr1 As uint16_t,ByRef mapped_addr As uint32_t ) As bool
+  
+ 
+lastread = 	addr1
 
- 
- 
- 
+    
+If addr1 < &H2000 Then
+	
+	'If (lastread And &H1000) = 0 And (addr1 And &H1000) > 0 Then
+    'get_scanline()
+'End if
+	
+
+End If
+
+
+
+    ' If((lastread And &H0800) = 0) And ((addr1 And &H0800) > 0) Then
+    '	
+    '	get_scanline()
+    'EndIf 
+      '  If(((addr1 And &H0800) > 0)) Then
+    	'
+    	'get_scanline()
+      '  EndIf 
+   
+
+ 'javidx9's//////////////////////////////////////////////////////////////////
 	if (addr1 >= &H0000 And addr1 <= &H03FF) Then
 	
-		mapped_addr = 72 + (addr1 And &H03FF) 
+		mapped_addr = pCHRBank(0)    + (addr1 And &H03FF) 
 		return true 
 	End If
 
@@ -273,8 +298,6 @@ Function ppuMapRead( addr1 As uint16_t,ByRef mapped_addr As uint32_t ) As bool
 		return true
 	End if
 
-
-
 	If (addr1 >= &H1400 And addr1 <= &H17FF) Then
  
 			mapped_addr = pCHRBank(5) + (addr1 And &H03FF)
@@ -292,6 +315,18 @@ Function ppuMapRead( addr1 As uint16_t,ByRef mapped_addr As uint32_t ) As bool
 		mapped_addr = pCHRBank(7) + (addr1 And &H03FF) 
 		return true
 	End If
+'/////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
 
 
 

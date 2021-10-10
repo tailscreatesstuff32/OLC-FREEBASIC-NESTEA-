@@ -14,14 +14,17 @@
 		'	'// by 1, moving to the next column
 		'	'vram_addr.reg +=  (IIf(control.increment_mode,32 ,1) )
 		'	
+		#Include Once "windows.bi"
+#Include once "crt.bi"
+#Include Once "crt/stdint.bi"
+#Include Once "win/windef.bi"
+#Include once "crt/string.bi"
+
+#Include Once "nes/olc2C02.bi"
+#Include Once "fbgfx.bi"
 
 
-'#Include Once "nes/olc2C02.bi"
-	'
-Dim Shared pattables(1) As Any ptr '=> {ImageCreate(128,128,RGB(0,0,0),32),ImageCreate(128,128,RGB(0,0,0),32)}
-
-
-	
+Dim Shared odd_frame	 As bool
 	
 	
 #define RGBA_R( c ) ( CUInt( c ) Shr 16 And 255 )
@@ -37,7 +40,17 @@ Dim Shared As uint8_t bg_pixel
 Dim Shared As uint8_t bg_pal0 
 Dim Shared As uint8_t bg_pal1
 Dim Shared As uint8_t bg_palette
+'Dim Shared imagedata((341*261)-1) As Uint8_t
+'Dim Shared imagedata(3,341,261) As Uint8_t
 
+Dim Shared mydata(256 * 240) As uint32_t
+Function flipbytes(b As uint8_t) As uint8_t
+	b = (b And &HF0) Shr 4 Or (b And &H0F) Shl 4
+	b = (b And &HCC) Shr 2 Or (b And &H33) Shl 2
+	b = (b And &HAA) Shr 1 Or (b And &H55) Shl 1
+	
+Return b
+End Function
 
 Function GetColourFromPaletteRam( pal1 As uint8_t,  pixel As uint8_t) As Uint32_t
 	'// This is a convenience function that takes a specified palette and pixel
@@ -82,10 +95,11 @@ Dim col1 As uint32_t
 
 		
 					tile_lsb shr= 1: tile_msb shr= 1 
+					
 
 		'col1= GetColourFromPaletteRam(pal1, pixel)
 				'	GetColourFromPaletteRam(pal1, pixel)
-				PSet pattables(i),((nTileX * 8 + (7 - col)),(nTileY * 8 + row)),GetColourFromPaletteRam(pal1, pixel)
+				'PSet pattables(i),((nTileX * 8 + (7 - col)),(nTileY * 8 + row)),GetColourFromPaletteRam(pal1, pixel)
 					
 					
 				Next
@@ -250,7 +264,7 @@ If (cart_MirrorMode() =  VERTICAL) Then
 		if ( addr1 =  &H0014)Then   addr1 =  &H0004
 		if ( addr1 =  &H0018)Then   addr1 =  &H0008
 		if ( addr1 =  &H001C)Then  addr1 =  &H000C
-	data1 = tblPalette( addr1)   '/and& (mask.grayscale ?  &H30 :  &H3F) 
+	data1 = tblPalette( addr1)  And  IIf(mask.grayscale, &H30,   &H3F) 
 	
 
 End If
@@ -314,12 +328,12 @@ If (cart_MirrorMode() =  VERTICAL) Then
 	' 
 	elseif ( addr1 >=  &H3F00 and addr1 <=  &H3FFF) Then
 	' 
- addr1 And= &H001F 
+      addr1 And= &H001F 
 		if ( addr1 =  &H0010) Then  addr1 =  &H0000
 		if ( addr1 =  &H0014)Then   addr1 =  &H0004
 		if ( addr1 =  &H0018)Then   addr1 =  &H0008
 		if ( addr1 =  &H001C)Then  addr1 =  &H000C
- tblPalette( addr1)=	data1    '/and& (mask.grayscale ?  &H30 :  &H3F) 
+      tblPalette( addr1)=	data1    '/and& (mask.grayscale ?  &H30 :  &H3F) 
 
  	'Beep
 	End if
@@ -458,7 +472,29 @@ End Sub
 			'// Shifting palette attributes by 1
 			bg_shifter_attrib_lo Shl=  1 
 			bg_shifter_attrib_hi Shl=  1 
+			
 		End If
+		
+'foreground stuff//////////////////////////////////////////////		
+		' add sprite shifters
+		If mask.render_sprites And cycle >=1 And cycle < 258 Then
+			
+			For i As Integer = 0 To sprite_count  
+				
+				If spritescanline(i).sx > 0 Then
+					spritescanline(i).sx-=1
+				Else
+					sprite_shifter_pattern_lo(i) Shl= 1 
+		      	sprite_shifter_pattern_hi(i) shl= 1 
+					
+					
+				EndIf
+			Next
+			
+		EndIf 
+'///////////////////////////////////////////////////////////////////
+
+		
 	End Sub
 
 
@@ -484,7 +520,7 @@ Sub ppu_reset()
 	control.reg =  &H00 
 	vram_addr.reg =  &H0000 
 	tram_addr.reg =  &H0000 
-	'Erase tblpalette
+	Erase tblpalette
 	
 End Sub
 
@@ -566,7 +602,7 @@ sub LoadBackgroundShifters()
 			'// shouldn't)
 			
 			'for burger time...
-		   'status.vertical_blank = 1 
+		 ' status.vertical_blank = 1 
 			data1 = (status.reg and &HE0) Or (ppu_data_buffer and &H1F) 
 
 			'// Clear the vertical blanking flag
@@ -581,6 +617,7 @@ sub LoadBackgroundShifters()
 
 			'// OAM Data
 		Case &H0004 
+		data1 = pOAM[oam_addr]
 
 		'	// Scroll - Not Readable
 		Case &H0005 
@@ -641,9 +678,10 @@ Sub ppu_cpuWrite( addr1 As uint16_t,  data1 as uint8_t)
 	case &H0002' // Status
  
 	case &H0003': // OAM Address
- 
+   oam_addr = data1
 	case &H0004  '// OAM Data
-	 
+	 pOAM[oam_addr] = data1
+
 	case &H0005  '// Scroll
 		if (address_latch =  0) Then
 	 
@@ -746,7 +784,7 @@ End Sub
 Sub renderer1()
 	If (scanline >= -1 And scanline < 240) then
 	 
-		if (scanline =  0 and cycle =  0) Then
+		If scanline  = 0 and cycle  = 0 and odd_frame and (mask.render_background Or mask.render_sprites)Then
 		
 			'// "Odd Frame" cycle skip
 			cycle = 1 
@@ -756,6 +794,20 @@ Sub renderer1()
 		 
 		'	// Effectively start of new frame, so clear vertical blank flag
 			status.vertical_blank = 0 
+			
+				 
+	 '//foreground stuff/////////////////////////////////////FINE
+	 
+			status.sprite_overflow = 0
+			status.sprite_zero_hit = 0
+			
+			For i As uint8_t = 0 To 8 - 1
+				sprite_shifter_pattern_lo(i) = 0
+				sprite_shifter_pattern_hi(i) = 0
+				
+			Next
+			
+		'/////////////////////////////////////////////////////	
 		End If
 
 
@@ -795,7 +847,7 @@ Sub renderer1()
 			  '//   |                |                |
 			'	//   |    (32x32)     |    (32x32)     |
 			'	//   |                |                |
-				'//   |                |                |
+			 '//   |                |                |
 			'	// 1 +----------------+----------------+
 			'	//   |                |                |
 			'	//   |                |                |
@@ -934,7 +986,9 @@ Sub renderer1()
 				IncrementScrollX() 
 				 
 			End Select
-	End If
+	   End If 
+	
+	
 	
 		'// End of a visible scanline, so increment downwards...
 		if (cycle =  256) then
@@ -945,26 +999,183 @@ Sub renderer1()
 		'//...and reset the x position
 		if (cycle  = 257) Then
 		 
-			'LoadBackgroundShifters() 
+			LoadBackgroundShifters() 
 			TransferAddressX() 
 		End If
 
+	
+		
 		'// Superfluous reads of tile id at end of scanline
 		if (cycle = 338 Or cycle = 340) Then
 		 
-		'	bg_next_tile_id = ppuRead(&H2000 or (vram_addr.reg and &H0FFF)) 
-	End If
-
-		if (scanline =  -1 and cycle >= 280 And cycle < 305) Then
+			bg_next_tile_id = ppuRead(&H2000 or (vram_addr.reg and &H0FFF)) 
+		End If
+		
+   If (scanline =  -1 and cycle >= 280 And cycle < 305) Then
 		 
 			'// End of vertical blank period so reset the Y address ready for rendering
-		 TransferaddressY() 
+		TransferaddressY() 
 		
 	EndIf
-End If
+	
+	
+If cycle  = 257 And scanline >=0 Then
+		memset(@spritescanline(0),&HFF,8 * SizeOf(sObjectAttributeEntry))
+		sprite_count = 0
+		
+		
+		
+		For i As uint8_t = 0 To 8 -1
+			
+			sprite_shifter_pattern_lo(i) = 0 
+			sprite_shifter_pattern_hi(i) = 0 
+			
+		Next
+		
+	Dim nOAMEntry As uint8_t = 0 
+	bSpriteZeroHitPossible = FALSE
+	While nOAMEntry < 64 And sprite_count < 9
+			Dim diff As int16_t = Cast(int16_t,scanline - Cast(int16_t,OAM(nOAMEntry).sy))
+		If (diff >=0 And diff < (IIf(control.sprite_size,16,8))) Then
+			If sprite_count < 8 Then
+				
+				If nOAMEntry = 0 Then
+					bSpriteZeroHitPossible = TRUE
+					
+				EndIf
+				
+				
+				memcpy(@spritescanline(sprite_count),@OAM(nOAMEntry),SizeOf(sObjectAttributeEntry))
+				sprite_count+=1
+			End If
+		EndIf
+		nOAMEntry+=1
+	Wend
+	status.sprite_overflow = IIf(sprite_count > 8,1,0)
+   End If	
+	
+	
+	
+	If cycle = 340 Then
+	
+		'WindowTitle(Str(sprite_count))
+		
+		'For i As uint8_t = 0 To sprite_count-1
+		'	
+		Dim i As uint8_t = 0
+		While i < sprite_count
+		Dim As uint8_t sprite_pattern_bits_lo,sprite_pattern_bits_hi
+		Dim As uint16_t sprite_pattern_addr_lo,sprite_pattern_addr_hi
+	
+		If iif(control.sprite_size,0,1) Then
+			
+			If IIf(spritescanline(i).attribute And &H80,0,1) Then 
+				
+		sprite_pattern_addr_lo = _ 
+						(control.pattern_sprite Shl 12) _
+						Or (spritescanline(i).id Shl 4) _
+						Or (scanline - spriteScanline(i).sy)
+				
+			Else
+				sprite_pattern_addr_lo = _ 
+						(control.pattern_sprite Shl 12) _
+						Or (spritescanline(i).id Shl 4) _
+						Or (7-(scanline - spriteScanline(i).sy))
+				
+				
+			EndIf
+			
+			
+			
+			
+		Else
+			
+			If IIf(spritescanline(i).attribute And &H80,0,1) Then 
+				
+				If scanline - spriteScanline(i).sy < 8 Then
+					
+					sprite_pattern_addr_lo = _  
+									((spriteScanline(i).id And &H01) Shl 12) _
+									Or ((spriteScanline(i).id And &HFE) Shl 4) _ 
+									Or ((scanline - spriteScanline(i).sy) And &H07)
+				
+				
+				Else
+				
+						sprite_pattern_addr_lo = _  
+									((spriteScanline(i).id And &H01) Shl 12) _
+									Or (((spriteScanline(i).id And &HFE)+1) Shl 4) _ 
+									Or ((scanline - spriteScanline(i).sy) And &H07)
+				
+				
+				
+				EndIf 
+				
+			
+			Else
+					
+				
+				If scanline - spriteScanline(i).sy < 8 Then
+				
+						sprite_pattern_addr_lo = _  
+									((spriteScanline(i).id And &H01) Shl 12) _
+									Or (((spriteScanline(i).id And &HFE)+1) Shl 4) _ 
+									Or ((7-(scanline - spriteScanline(i).sy)) And &H07)
+				Else
+				sprite_pattern_addr_lo = _  
+									((spriteScanline(i).id And &H01) Shl 12) _
+									Or ((spriteScanline(i).id And &HFE) Shl 4) _ 
+									Or ((7-(scanline - spriteScanline(i).sy)) And &H07)
+				EndIf
+			EndIf
+		EndIf
+		
+		
+		
+		sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8
+		sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo)
+		sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi)
+		 
+			
+			If spritescanline(i).attribute And &H40 Then
+				
+				
+	      sprite_pattern_bits_lo = flipbytes(sprite_pattern_bits_lo)
+		   sprite_pattern_bits_hi = flipbytes(sprite_pattern_bits_hi)
+		
+			EndIf
+			
+			sprite_shifter_pattern_lo(i) = sprite_pattern_bits_lo
+			sprite_shifter_pattern_hi(i) = sprite_pattern_bits_hi
+			i+=1
+		Wend
+	 'Next
+		
 
+	EndIf
+	
+	
+		
+	
+End If ' this end if  belongs to 	line 784
 
-	if (scanline =  240) Then
+	
+	
+	
+
+'end foreground stuff///////////////////////////////////////////////////			
+		
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+'///////////////////////////////////////////////////////////////////////	 
+	 	if (scanline =  240) Then
 	 
 		'// Post Render Scanline - Do Nothing!
 	End If
@@ -989,6 +1200,9 @@ End If
 	    End If
 	End If
 
+
+
+
 	'// Composition - We now have background pixel information for this cycle
 	'// At this point we are only interested in background
 
@@ -1000,7 +1214,7 @@ End If
 	'// to form 0x00. This will fall through the colour tables to yield
 	'// the current background colour in effect
 	If (mask.render_background) Then
-
+If (mask.render_background_left or (cycle >= 9)) Then
 		'// Handle Pixel Selection by selecting the relevant bit
 		'// depending upon fine x scolling. This has the effect of
 		'// offsetting ALL background rendering by a set number
@@ -1022,6 +1236,231 @@ End If
 		bg_pal1 = iif((bg_shifter_attrib_hi And bit_mux) > 0,1,0) 
 		bg_palette = (bg_pal1 shl 1) or bg_pal0 
 	 End If
+	End If
+	 
+	 
+''//foreground stuff/////////////////////////////////////
+	 Dim fg_pixel As uint8_t
+	 Dim fg_palette As uint8_t
+	 Dim fg_priority As uint8_t
+	 
+	 
+	 If mask.render_sprites Then
+	 		 bSpriteZeroBeingRendered = FALSE
+	 	
+	 	'For i As uint8_t = 0 To sprite_count-1
+	If (mask.render_background_left or (cycle >= 9)) Then
+	Dim i As uint8_t = 0 
+
+	 		While i  < sprite_count
+	 		If spritescanline(i).sx = 0 Then
+	 			Dim As uint8_t fg_pixel_lo = IIf((sprite_shifter_pattern_lo(i) And &H80) > 0,1,0)
+	 			Dim As uint8_t fg_pixel_hi = IIf((sprite_shifter_pattern_hi(i) And &H80) > 0,1,0)
+	 			fg_pixel = (fg_pixel_hi Shl 1) Or fg_pixel_lo
+	 			
+	 			fg_palette = (spritescanline(i).attribute And &H03) + &H04
+	 			fg_priority = IIf(spritescanline(i).attribute And &H20,0,1)
+	 			
+	 			If fg_pixel <> 0 Then
+	 				
+	 				'Exit for
+	 				If i= 0 Then
+	 				bSpriteZeroBeingRendered	= TRUE
+	 				EndIf
+	 				
+	 				Exit while
+	 			EndIf
+	 		EndIf
+	 		i+=1
+	 		Wend
+	 		EndIf
+	 	'Next 
+	 EndIf
+	 
+	 Dim pixel As uint8_t = 0
+	 Dim pal1 As uint8_t= 0
+	 
+	 	 If (bg_pixel = 0 And fg_pixel = 0) Then
+	 	
+	 	pixel = 0
+	 	pal1 = 0 
+	 	
+	 ElseIf (bg_pixel = 0 And fg_pixel >0) Then
+	 	
+	 	pixel = fg_pixel
+	 	pal1 = fg_palette
+	  ElseIf (bg_pixel > 0 And fg_pixel = 0) Then
+	 	
+	 	pixel = bg_pixel
+	 	pal1 = bg_palette
+	 	
+	 ElseIf (bg_pixel > 0 And fg_pixel > 0) Then
+	 	
+	 	'pixel = bg_pixel
+	 	'pal1 = bg_palette	
+	 	
+	 	If fg_priority Then
+	 		
+	 		
+	 		
+	 		pixel = fg_pixel
+	 		pal1 = fg_palette
+	 	Else
+	 		pixel = bg_pixel
+	 		pal1 = bg_palette
+	 		
+	 	EndIf
+	
+	 	If bSpriteZeroHitPossible And bSpriteZeroBeingRendered Then
+	 		
+	 		If mask.render_background And mask.render_sprites Then
+	 			
+	 			If (Not(mask.render_background_left Or mask.render_sprites_left)) Then
+	 				
+	 				If cycle >= 9 And cycle < 258 Then
+	 					
+	 					status.sprite_zero_hit = 1
+	 					
+	 					
+	 				EndIf
+	 				
+	 			Else
+	 					If cycle >= 1 And cycle < 258 Then
+	 					
+	 					status.sprite_zero_hit = 1
+	 					EndIf
+	 			EndIf
+	 		EndIf
+	 	EndIf
+	 	
+	 	
+	 	
+	 EndIf
+	 
+	 
+	 
+	 
+	
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+'////////////////////////////////////////////////////////////
+	'col1 = GetColourFromPaletteRam(pal1, pixel)
+	'image width: 341
+   'image height: 261
+'imagedata(cycle*scanline) = RGBA_R(col1)
+'imagedata((cycle+1)*scanline) = RGBA_G(col1)
+'imagedata((cycle+2)*scanline) = RGBA_B(col1)
+'imagedata((cycle+3)*scanline) = RGBA_A(col1)
+
+
+
+'WIP
+'imagedata(3,cycle,scanline) = RGBA_A(col1)
+'imagedata(2,cycle,scanline) = RGBA_R(col1)
+'imagedata(1,cycle,scanline) = RGBA_G(col1)
+'imagedata(0,cycle,scanline) = RGBA_B(col1)
+
+
+
+	'imagedata(2) = RGBA_B(col1)
+	'imagedata(3) = RGBA_A(col1)  
+	
+	
+
+	'Line nesscrn,((cycle-1)*3,  ((scanline)*3))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(pal1, pixel) , BF 
+	 'Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(pal1, pixel) , BF 
+
+
+
+	' Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(bg_palette, bg_pixel) , BF 
+	' Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(fg_palette, fg_pixel) , BF 
+
+
+If cycle >  0 Then
+If scanline > -1 Then
+If cycle <=  256 Then
+If scanline <=  240-1 Then
+mydata(((cycle-1)+256*scanline)) = GetColourFromPaletteRam(pal1, pixel)
+'Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1), mydata((cycle+341*scanline)-1), BF
+
+End If
+End If
+End If
+End If
+	 
+	
+ 	cycle+=1
+ 	'
+ 	'If(mask.render_background or mask.render_sprites) Then
+   ' If ( scanline < 240 ) Then
+   '     
+   '         If( cycle = 324 Or cycle = 4 )Then
+   '             get_scanline()
+   '         End If
+   '     Else
+   '         If ( cycle = 260 ) Then
+   '             get_scanline()
+   '         End If
+   ' End If
+   ' 
+   ' 
+   ' 
+   ' 
+   ' 
+   ' 
+ 	'End If
+    
+
+' 		If(mask.render_background or mask.render_sprites) Then
+'		If (cycle =  260 And scanline < 240) Then
+		 
+'			 get_scanline() 
+			 
+
+	'	End If
+'	  End If
+
+ 		
+'If  scanline = 174  Then
+'  If cycle = 288 Then
+'    	get_scanline()
+'   
+'    
+'    End If
+' 	End If
+' 	
+' 		
+' 		
+		'
+	If (cycle >= 341) then
+ 
+		cycle = 0 
+		scanline+=1
+		if (scanline >= 261) Then
+		 
+			scanline = -1
+			frame_complete = TRUE
+			 odd_frame = IIf(odd_frame,0,1)
+		End If
+	End If
+
 End Sub
 
 
@@ -1032,55 +1471,51 @@ renderer1()
 
 '	 		
 'GetColourFromPaletteRam(bg_palette, bg_pixel)
-  Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(bg_palette, bg_pixel) , BF 
 
+
+'  Line nesscrn,((cycle-1)*2,  ((scanline)*2))-STEP(2 OR 1, 2 OR 1),GetColourFromPaletteRam(bg_palette, bg_pixel) , BF 
 '
+''
+'
+'
+' 	cycle+=1
+' 	
+'	If (cycle >= 341) then
+' 
+'		cycle = 0 
+'		scanline+=1
+'		if (scanline >= 261) Then
+'		 
+'			scanline = -1
+'			frame_complete = TRUE
+'			 
+'		End If
+'	End If
 
-
- 	cycle+=1
  	
-	If (cycle >= 341) then
- 
-		cycle = 0 
-		scanline+=1
-		if (scanline >= 261) Then
-		 
-			scanline = -1
-			frame_complete = TRUE
-			 
-		End If
-	End If
-
- 	
-
-
- 	'Print cycle
-	'WindowTitle("dot: "+ Str(cycle)+" "+ str(scanline))
 End Sub
 
-'	'Dim b1 As Long
-'	'Dim g1 As Long
-'	
-'	'glBegin(GL_POINTS):  	glColor3f((RGBA_R(col1)/255),(RGBA_G(col1)/255),(RGBA_B(col1)/255)):  glVertex2i(cycle-1,scanline): glEnd()
+
+'             'allow for easy changes...
 '
-'
-'	'// Now we have a final pixel colour, and a palette for this cycle
-'	'// of the current scanline. Let's at long last, draw that ^&%*er :P
-'
-''	sprScreen.SetPixel(cycle - 1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
-'
+'DO 'Main Loop
+'    LT! = TIMER ' Set Loop start time..
 '   
-'   'PSet(nesscrn,cycle-1,scanline,GetColourFromPaletteRam(bg_palette, bg_pixel))
-'
-'
-'	'// Fake some noise for now
-'	'//sprScreen.SetPixel(cycle - 1, scanline, palScreen[(rand() % 2) ? 0x3F : 0x30]);
-'
-'	'// Advance renderer - it never stops, it's relentless
-'	
-'	'col1  = GetColourFromPaletteRam(bg_palette, bg_pixel)
-'	
-'	
-'	'PSet nesscrn,((cycle-1),(scanline)),GetColourFromPaletteRam(bg_palette, bg_pixel)
-
-
+'    LOCATE 1, 1: PRINT INT(FPS!); "   " 'Visual reference on whats happening..
+'   
+'    FPS! = F / (TIMER - T!)' Find FPS
+'    IF LOCFPS <> INT(FPS!) THEN 'If the actual FPS is not the FPS wanted
+'                                'then modify the delay...
+'                               
+'        IF LOCFPS < FPS! THEN DLY! += .001 'Increace Delay if too fast
+'        IF LOCFPS > FPS! THEN DLY! -= .001 'Decreace Delay if too slow
+'       
+'    END IF 'Stop checking
+'   
+'    DO: LOOP UNTIL (TIMER - LT!) >= DLY! 'Loop delay, with the help of
+'                                         'above, this will speed up or
+'                                         'slow down the main loop speed.
+'                                         
+'    F += 1 'Count the frames, this will divide to loop time for FPS
+'   
+'LOOP UNTIL INKEY$ <> "" 'Loop until key is pressed..
