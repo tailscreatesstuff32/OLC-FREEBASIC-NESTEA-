@@ -569,7 +569,7 @@ Function WinMain(hInstance As HINSTANCE, hPrevInstance As HINSTANCE, lpCmdLine A
 hwnd = CreateWindowEx( _
 		NULL, _
 		 wcex.lpszClassName, _
-		"OLC-NES-NESTEA-FB", _
+		"OLC-NES-NESTEA-FB-V0.1", _
 			WS_OVERLAPPED Or WS_SYSMENU Or WS_CAPTION or WS_MINIMIZEBOX  or WS_CLIPCHILDREN or WS_CLIPSIBLINGS, _
 		300,300, _
 		winrect.right-winrect.left, _
