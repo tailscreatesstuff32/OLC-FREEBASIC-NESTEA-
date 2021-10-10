@@ -157,14 +157,20 @@
 		'works fine
  	mapper_000(cart_nPRGBanks,cart_nCHRBanks)     
 		
-		case   2 ' is actually working so far
+		'case   2 ' is actually working so far
 	'mapper_002(cart_nPRGBanks,cart_nCHRBanks)  
 		
 		'//case   2: pMapper = std::make_shared<Mapper_002>(nPRGBanks, nCHRBanks); break;
 		'//case   3: pMapper = std::make_shared<Mapper_003>(nPRGBanks, nCHRBanks); break;
-		case   4:
+		'case   4:
 	' mapper_004(cart_nPRGBanks,cart_nCHRBanks)  
 		'//case  66: pMapper = std::make_shared<Mapper_066>(nPRGBanks, nCHRBanks); break;
+		Case Else
+		Print "invalid mapper! only mapper 0 games for now..."
+		
+		Sleep
+		End
+		
 		End select 
         
         

@@ -16,7 +16,6 @@ Dim Shared pattables(1) As Any ptr '=> {ImageCreate(128,128,RGB(0,0,0),32),Image
 #include "tests1.bi"
 
 
-
 #define KEYDOWN(vk_code) (IIf(GetAsyncKeyState(vk_code) And &H8000), 1, 0)
 #define KEYUP(vk_code)   (IIf(GetAsyncKeyState(vk_code) And &H8000),0, 1)
 
@@ -68,6 +67,7 @@ Dim Shared nesrect As rect => (0,0,256*2 ,240*2)
 
 '/1000'gettickcount/1000.0f
 fElapsedstart = Timer
+
 
 Function KEYPRESSED(vk_code As Integer) As bool
 	static Iskeyup(&HFF) As bool
@@ -636,7 +636,16 @@ Dim LOCFPS As Integer
 '	Return 0
 	
 End Function
-insert_cartridge("roms/kung fu.nes")
+
+
+Dim cart As String
+
+
+Input   "enter rom path or drag file here: ", cart
+insert_cartridge(cart)
+
+
+'insert_cartridge("roms/kung fu.nes")
 'insert_cartridge("donkey.nes")
 'insert_cartridge("Burger Time (U) [!].nes")
 'insert_cartridge("Felix the Cat (U).nes")
@@ -674,6 +683,8 @@ insert_cartridge("roms/kung fu.nes")
 
 
 
+
+
 'insert_cartridge("roms/Kirby's Adventure (USA).nes")
 'insert_cartridge("roms/Volleyball.nes")
 
@@ -684,6 +695,7 @@ insert_cartridge("roms/kung fu.nes")
 'insert_cartridge("roms/SMB.nes")
 'insert_cartridge("ice climber.nes")
 'insert_cartridge("roms/Megaman1.nes")
+
 	If ImageValid = TRUE Then
 	Print "CRC: " & "???? WORK IN PROGRESS"
 	Print "loaded rom!"
