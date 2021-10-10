@@ -95,7 +95,7 @@ SUB frames_per_sec(hwnd As hwnd)
     IF TIMER - start  >= 1 THEN fps = ff : ff  = 0: start  = TIMER
  SetConsoleTitle "OLC-NES-NESTEA-FB:"+" FPS:" + STR (fps )
  Dim titles1 As String
- titles1="OLC-NES-NESTEA-FB:"&" FPS:" & STR (fps )
+ titles1="OLC-NES-NESTEA-FB-V0.1:"&" FPS:" & STR (fps )
 setwindowtext(hwnd,titles1 )
 
 END Sub
