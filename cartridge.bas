@@ -166,7 +166,7 @@
 	' mapper_004(cart_nPRGBanks,cart_nCHRBanks)  
 		'//case  66: pMapper = std::make_shared<Mapper_066>(nPRGBanks, nCHRBanks); break;
 		Case Else
-		Print "invalid mapper! only mapper 0 games for now..."
+		Print "invalid mapper ";nMapperID;"! "; "only mapper 0 games for now..."
 		
 		Sleep
 		End
