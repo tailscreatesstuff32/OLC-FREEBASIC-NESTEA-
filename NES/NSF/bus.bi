@@ -26,7 +26,7 @@ Declare Function bus_read(addr1 As uint16_t, bReadOnly As bool = false) As uint8
 #Include Once "nes/olc2C02.bi"
 '#Include Once "olc2c02.bas"
 
-#Include Once "nes/cartridge.bi"
+'#Include Once "nes/cartridge.bi"
 '#Include Once "cartridge.bas"
 
 
