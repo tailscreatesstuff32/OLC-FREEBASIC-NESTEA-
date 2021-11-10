@@ -1,0 +1,6 @@
+#define IDR_RCDATA1 1
+#define IDI_ICON1 1010
+
+FB_PROGRAM_ICON ICON DISCARDABLE "res/icon1.ico"
+IDI_ICON1 ICON DISCARDABLE "res/icon1.ico"
+
