@@ -1,5 +1,5 @@
 
-#Include Once "nes/cartridge.bi"
+'#Include Once "nes/cartridge.bi"
 
 
 #Include Once "windows.bi"
