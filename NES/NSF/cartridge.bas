@@ -4,7 +4,7 @@
 
 #Include Once "windows.bi"
 #Include Once "containers/vector.bi"
-#include "nes/Cartridge.bi"
+'#include "nes/Cartridge.bi"
 #include "file.bi" 
 
 '#include once "CRC32.bas"
