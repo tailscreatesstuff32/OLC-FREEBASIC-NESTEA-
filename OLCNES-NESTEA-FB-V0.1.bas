@@ -2,7 +2,7 @@
 
 
 Dim shared As HWND hwnd 
-'using fbsound for audio for now
+'using fbsound for audio for now WIP
 #include "../inc/fbsound.bi"
 
 'the nes system starts here//////////
