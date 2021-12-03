@@ -1,0 +1,49 @@
+[Project]
+Version=3
+Description=OLCNES-NESTEA-FB-V0.1
+Api=fb (FreeBASIC)
+[Make]
+Current=1
+1=Windows Console,fbc -s console
+Recompile=2
+Module=Module Build,fbc -c
+[TabOrder]
+TabOrder=1,2
+[File]
+1=NES\APU.bas
+2=NESTEA W AUDIO.bas
+3=NES\APU.bi
+4=NES\Audio.bas
+5=NES\Audio.bi
+6=NES\AUDIO_NSF.bas
+7=NES\AUDIO_NSF.bi
+8=NES\bus.bas
+9=NES\bus.bi
+10=NES\cartridge.bas
+11=NES\CRC32.bas
+12=NES\olc2C02.bas
+13=NES\olc2C02.bi
+14=NES\olc6502.bas
+15=NES\olc6502.bi
+16=NES\mappers\mapper_NEW.bas
+17=NES\mappers\mapper00_NEW.bas
+18=NES\mappers\mapper01_NEW.bas
+19=NES\mappers\mapper02_NEW.bas
+20=NES\mappers\mapper03_NEW.bas
+21=NES\mappers\mapper04_NEW.bas
+22=NES\mappers\mapper37_NEW.bas
+23=NES\mappers\mapper66_NEW.bas
+24=NES\OLD\bus.bas
+25=NES\OLD\bus.bi
+26=NES\OLD\cartridge.bas
+27=NES\OLD\CRC32.bas
+28=NES\OLD\NES.bi
+29=NES\OLD\olc2C02.bas
+30=NES\OLD\olc2C02.bi
+31=NES\OLD\olc6502.bas
+32=NES\OLD\olc6502.bi
+[BreakPoint]
+1=
+[FileInfo]
+1=0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2=0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
